@@ -1,0 +1,196 @@
+<!--FINAL PROJECT-->
+<!--GROUP MEMBERS: Noah Amaral, Imraan Ishmail, Kelly Narine, Deshawn Kerr-->
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Current Weather</title>
+  <h4 id="header"></h4>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.0/jquery.min.js">
+  </script>
+  <!--Styling-->
+  <style>
+    * {
+      
+      
+      font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+
+    }
+    body
+    {
+      background: rgb(9,83,121);
+      background: linear-gradient(90deg, rgba(9,83,121,1) 0%, rgba(20,213,254,1) 100%);   
+    }
+
+    h2 {
+      font-weight: bold;
+      font-size: 30px;
+      text-align: center;
+      color: yellow;
+    }
+
+    #enterCity {
+      padding-left: 630px;
+      color: #3b83ff;
+    }
+
+    #cityTextBox {
+      display: inline;
+      background-color: white;
+    }
+
+    #viewInfo,
+    #content {
+      text-align: center;
+    }
+
+    #displayResults {
+      width: 100%;
+      text-align: center;
+      margin-top: 20px;
+      color: white;
+      font-size: large;
+
+    }
+
+    #displayTime {
+      margin-top: 5px;
+      padding: 25px;
+      font-style: italic;
+      text-align: right;
+      color: yellow;
+    }
+
+    #submitCity {
+      margin-top: 10px;
+      background-color: yellow;
+      font-weight: bold;
+      color: green;
+    }
+
+    #header {
+      color: whitesmoke;
+    }
+    #footer {
+      color: whitesmoke;
+      font-size: 10px;
+    }
+  </style>
+  <script>
+    $(document).ready(function () {
+      //Drop Down List Function
+      //Function will fetch all the cities in this API url
+      let url = 'http://api.timezonedb.com/v2.1/list-time-zone?key=9JQPJOU5ZDGM&format=json';
+      fetch(url)
+        .then(res => res.json())
+        .then((out) => {
+          console.log('Checkout this JSON! ', out);
+          //Loop will keep adding names until no more cities left
+          for (var i = 0; i < out.zones.length; i++) {
+            var zoneResult = out.zones[i].zoneName;
+            var zoneSplit = zoneResult.split("/")
+            $('#cityTextBox').append('<option value="' + zoneSplit[zoneSplit.length - 1] + '">' + zoneSplit[zoneSplit.length - 1] + '</option>')
+          }
+        })
+        .catch(err => { throw err });
+
+      $('#submitCity').click(function () {
+        //Weather API
+        var city = $("#cityTextBox").val();
+        var key = "99b8e9431f40425eb1e204318200112"
+        if (city != '') {
+          $.ajax({
+            url: "http://api.weatherapi.com/v1/current.json?key=%20" + key + "&q=" + city,
+            type: "GET",
+            success: function (data) {
+              var output = displayResults(data);
+              $("#displayResults").html(output);
+              $("#cityTextBox").val('');
+              $("#error").html('')
+            }
+          });
+          //Timezone API
+          var timeKey = "9JQPJOU5ZDGM"
+          var continent = $("#continentTextBox").val();
+          var country = $("#countryTextBox").val();
+          $.ajax({
+            url: 'http://api.weatherapi.com/v1/timezone.json?key=99b8e9431f40425eb1e204318200112&q=' + city,
+            type: "GET",
+            success: function (data) {
+              var output = showTime(data)
+              $('#displayTime').html(output);
+            }
+          });
+        }
+        else {
+          //Error message prompts if city not selected
+          //Values stay blank
+          alert("City required. Please select from the list.");
+          $("#displayResults").html('');
+          $('#displayTime').html('');
+          $("#continentTextBox").val('');
+          $("#countryTextBox").val('');
+        }
+      });
+    });
+
+    //Function to display the weather results
+    function displayResults(data) {
+      return "<b><u>" + data.location.name + ", " + data.location.country + "</u></b><br><br><br>" +
+        "<img src='" + data.current.condition.icon + "'><br><br>" + "<b>Weather</b>: <i>" + data.current.condition.text + "</i><br><br>" +
+        "<b>Temperature</b>: <i>" + data.current.temp_c + " &degC" + "</i><br><br>" +
+        "<b>Feels Like</b>: <i>" + data.current.feelslike_c + " &degC" + "</i><br><br>" +
+        "<b>Wind Speed</b>: <i>" + data.current.wind_kph + " kph" + "</i><br><br>" +
+        "<b>Wind Gust</b>: <i>" + data.current.gust_kph + " kph" + "</i><br><br>" +
+        "<b>Wind Direction</b>: <i>" + data.current.wind_dir + "</i><br><br>"
+    }
+
+    //Funtion to display the time
+    function showTime(data) {
+      var time = data.location.localtime
+      return "Time: " + time
+    }           
+  </script>
+  <script type="text/javascript">
+  loadHeader();
+  loadFooter();
+  function loadHeader() {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200) {
+          header.innerHTML = xhr.responseText;
+        }
+      }
+      xhr.open("GET","header.txt",true);
+      xhr.send();
+    }
+    function loadFooter() {
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if(xhr.readyState == 4 && xhr.status == 200) {
+          footer.innerHTML = xhr.responseText;
+        }
+      }
+      xhr.open("GET","footer.txt",true);
+      xhr.send();
+    }
+  </script>
+</head>
+
+<body>
+  <div id="content">
+    <h2>Weather Tracker</h2>
+    <!--Dropdown List for Cities-->
+    <select id="cityTextBox">
+      <option value="">--Select City--</option>
+    </select>
+    <span id="error"></span>
+  </div>
+  <div id="viewInfo"><button id="submitCity">View Weather</button></div>
+  <div id="displayResults"></div>
+  <div id="displayTime"></div>
+  </div>
+</body>
+<footer id="footer"></footer>
+</html>
